@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Pygame Zero",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pgzero",
+      "args": ["game.py"],
+      "python": "C:\\Users\\halil\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}

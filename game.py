@@ -1,9 +1,9 @@
 from enum import IntEnum, StrEnum, Enum, auto
 from random import randint
 
-WIDTH = 560
 HEIGHT = 600
-
+WIDTH = 560
+#       560 x 600   разрешение окна
 
 class Constants(IntEnum):
     ONE_CUBE_ON_PIXELS = 60  # 23
@@ -11,6 +11,8 @@ class Constants(IntEnum):
     START_CUBES_X = 100
     CUBES_DRAW_WIDTH = 25
     CUBES_DRAW_HEIGHT = 80
+    CELL_SPACING_DIFF_BUTTONS=26
+    PUT_BUTTONS_X=130
 
 
 class Constants_Str(StrEnum):
@@ -21,9 +23,13 @@ class Constants_Str(StrEnum):
 
 class Difficlty(IntEnum):
     EASY = 8
+    BOMBS_ON_EASY=10
     MEDIUM = 12
-    BOMBS_ON_MEDIUM = 10
+    BOMBS_ON_MEDIUM = 12
     HARD = 16
+    BOMBS_ON_HARD=25
+    DEFAULT=2
+    DEFAULT_BOMBS=1
 
 
 class Stages_of_game_constants(Enum):
@@ -44,16 +50,28 @@ class Player:
 
 
 class States_of_game:
-    def __init__(self, screen_obj):
+    def __init__(self):
         self.state = Stages_of_game_constants.MENU
-        self.screen = screen_obj
 
     def get_game_state(
-        self,
+        self,screen
     ):
         if self.state == Stages_of_game_constants.MENU:
-            self.screen.fill((40, 136, 235))
-            self.screen.blit('game_button',(130,60))
+            screen.fill((40, 136, 235))
+            screen.blit('game_button',(130,60))
+            
+        elif self.state == Stages_of_game_constants.SELECTING_DIFFICULTY:
+
+            screen.blit('select_diff_easy',(Constants.PUT_BUTTONS_X,52))
+
+            screen.blit('select_diff_medium',(Constants.PUT_BUTTONS_X,220))
+
+            screen.blit('select_diff_hard',(Constants.PUT_BUTTONS_X,388))
+            
+        elif self.state==Stages_of_game_constants.GAME:
+            # field = field_generate(DIFF, BOMBS_ON_DIFF)
+            # SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
+            field_update(screen, field, DIFF, SIZE_OF_BLOCK)
 
 
 class field_obj:
@@ -78,8 +96,8 @@ def field_generate(diff, bombs_on_diff):
         field.append(in_field)
     bombs_to_plase = bombs_on_diff
     while bombs_to_plase:
-        x = randint(0, bombs_on_diff)
-        y = randint(0, bombs_on_diff)
+        x = randint(0, diff-1)
+        y = randint(0, diff-1)
         if not field[x][y].is_dombed:
             field[x][y].is_dombed = True
             bombs_to_plase -= 1
@@ -98,30 +116,65 @@ def field_update(screen_, field, count_field, size_of_block):
         screen_.blit(field[x][y].texture_give(), (draw_x, draw_y))
 
 
-DIFF = Difficlty.MEDIUM
-BOMBS_ON_DIFF = Difficlty.BOMBS_ON_MEDIUM
-SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
-field = field_generate(DIFF, BOMBS_ON_DIFF)
+DIFF = Difficlty.DEFAULT
+BOMBS_ON_DIFF = Difficlty.DEFAULT_BOMBS
+SIZE_OF_BLOCK = 0#(min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
+game_status=States_of_game()
+SAZE_OF_PICTYRE=images.select_diff_medium.get_size()
+
+field = []#field_generate(DIFF, BOMBS_ON_DIFF)
 
 
 def draw():
-
     screen.clear()
     screen.fill((40, 136, 235))  # голубой задний фон
 
-    field_update(screen, field, DIFF, SIZE_OF_BLOCK)
 
-    screen.blit('game_button',(130,60))
+    game_status.get_game_state(screen)
+    #field_update(screen, field, DIFF, SIZE_OF_BLOCK)
+    #screen.blit('game_button',(130,60))
 
 
 def on_mouse_down(pos, button):
-    print(pos)
+    global DIFF,BOMBS_ON_DIFF,field,SIZE_OF_BLOCK
     x, y = pos
-    change_x = (x - Constants.CUBES_DRAW_WIDTH) // (
-        SIZE_OF_BLOCK + Constants.CELL_SPACING
-    )
-    change_y = (y - Constants.CUBES_DRAW_HEIGHT) // (
-        SIZE_OF_BLOCK + Constants.CELL_SPACING
-    )
-    if change_x < DIFF and change_y < DIFF:
-        field[change_x][change_y].is_solid = False
+
+    if game_status.state==Stages_of_game_constants.MENU:
+        if 130<x<430 and 60<y<212:
+            game_status.state=Stages_of_game_constants.SELECTING_DIFFICULTY
+            
+    elif game_status.state==Stages_of_game_constants.SELECTING_DIFFICULTY:
+        
+        if Constants.PUT_BUTTONS_X<x<SAZE_OF_PICTYRE[0]+Constants.PUT_BUTTONS_X and 52<y<SAZE_OF_PICTYRE[1]+52:
+            DIFF = Difficlty.EASY
+            BOMBS_ON_DIFF = Difficlty.BOMBS_ON_EASY
+            game_status.state=Stages_of_game_constants.GAME
+            
+        elif Constants.PUT_BUTTONS_X<x<SAZE_OF_PICTYRE[0]+Constants.PUT_BUTTONS_X and 220<y<SAZE_OF_PICTYRE[1]+220:
+            DIFF = Difficlty.MEDIUM
+            BOMBS_ON_DIFF = Difficlty.BOMBS_ON_MEDIUM
+            game_status.state=Stages_of_game_constants.GAME
+            
+        elif Constants.PUT_BUTTONS_X<x<SAZE_OF_PICTYRE[0]+Constants.PUT_BUTTONS_X and 388<y<SAZE_OF_PICTYRE[1]+388:
+            DIFF = Difficlty.HARD
+            BOMBS_ON_DIFF = Difficlty.BOMBS_ON_HARD
+            game_status.state=Stages_of_game_constants.GAME
+            
+        else:
+            DIFF = Difficlty.DEFAULT
+            BOMBS_ON_DIFF = Difficlty.DEFAULT_BOMBS
+            game_status.state=Stages_of_game_constants.GAME
+            
+            
+        field = field_generate(DIFF, BOMBS_ON_DIFF)
+        SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
+        
+    elif game_status.state==Stages_of_game_constants.GAME:
+        change_x = (x - Constants.CUBES_DRAW_WIDTH) // (
+            SIZE_OF_BLOCK + Constants.CELL_SPACING
+        )
+        change_y = (y - Constants.CUBES_DRAW_HEIGHT) // (
+            SIZE_OF_BLOCK + Constants.CELL_SPACING
+        )
+        if change_x < DIFF and change_y < DIFF:
+            field[change_x][change_y].is_solid = False

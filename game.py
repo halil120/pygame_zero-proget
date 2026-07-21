@@ -1,4 +1,4 @@
-from enum import IntEnum, StrEnum
+from enum import IntEnum, StrEnum, Enum, auto
 from random import randint
 
 WIDTH = 560
@@ -26,6 +26,13 @@ class Difficlty(IntEnum):
     HARD = 16
 
 
+class Stages_of_game_constants(Enum):
+    MENU = auto()
+    SELECTING_DIFFICULTY = auto()
+    GAME = auto()
+    END_OF_GAME = auto()
+
+
 class Player:
     def __init__(self, x, y):
         self.player_x = x
@@ -34,6 +41,19 @@ class Player:
         self.money = 0
         self.alive = True
         self.dig_speed = 1
+
+
+class States_of_game:
+    def __init__(self, screen_obj):
+        self.state = Stages_of_game_constants.MENU
+        self.screen = screen_obj
+
+    def get_game_state(
+        self,
+    ):
+        if self.state == Stages_of_game_constants.MENU:
+            self.screen.fill((40, 136, 235))
+            self.screen.blit('game_button',(130,60))
 
 
 class field_obj:
@@ -91,8 +111,11 @@ def draw():
 
     field_update(screen, field, DIFF, SIZE_OF_BLOCK)
 
+    screen.blit('game_button',(130,60))
+
 
 def on_mouse_down(pos, button):
+    print(pos)
     x, y = pos
     change_x = (x - Constants.CUBES_DRAW_WIDTH) // (
         SIZE_OF_BLOCK + Constants.CELL_SPACING

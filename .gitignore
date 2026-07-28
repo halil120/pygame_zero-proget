@@ -1,3 +1,5 @@
 game_with_jump(frozen).py
 \.vscode
 \.agents
+*.pyc
+\__pycache__

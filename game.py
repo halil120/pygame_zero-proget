@@ -68,19 +68,44 @@ class PlayersClass:
 
     def move(self):
         x, y = self.looking_to
-        if not field[self.player_x + x][self.player_y + y].is_solid:
-            self.player_x += x
-            self.player_y += y
+        if 0<=self.player_x + x<DIFF and 0<=self.player_y + y<DIFF:
+            move_to=field[self.player_x + x][self.player_y + y]
+            if not move_to.is_solid:
+                self.player_x += x
+                self.player_y += y
+
 
     def break_block(self):
-        break_what = field[self.player_x + self.looking_to[0]][
-            self.player_y + self.looking_to[1]
-        ]
-        if break_what.is_bombed:
-            game_status.state = StagesOfGameConstants.END_OF_GAME
-        elif break_what.is_solid and not break_what.is_flagget:
-            break_what.is_solid = False
+        x, y = self.looking_to
+        if 0<=self.player_x + x<DIFF and 0<=self.player_y + y<DIFF:
+            break_what = field[self.player_x + x][
+                self.player_y + y]
+            if break_what.is_bombed:
+                game_status.state = StagesOfGameConstants.END_OF_GAME
+            elif break_what.is_solid and not break_what.is_flagget:
+                break_what.is_solid = False
+                
+                
+    def plase_flag(self):
+        global count_of_flags
+        x, y = self.looking_to
+        if 0<=self.player_x + x<DIFF and 0<=self.player_y + y<DIFF:
+            field_x_y=field[self.player_x + x][self.player_y + y]
+            
+            if (
+                field_x_y.is_solid
+                and not field_x_y.is_flagget
+            ):
+                field_x_y.is_flagget = True
+                count_of_flags += 1
+            elif (
+                field_x_y.is_solid
+                and field_x_y.is_flagget
+            ):
+                field_x_y.is_flagget = False
+                count_of_flags -= 1
 
+        
     def change_looking_to(self, rotation):
         # x,y=rotation.value
         # self.looking_to=(self.player_x+x,self.player_y+y)
@@ -104,8 +129,9 @@ class StatesOfGame:
 
             screen.blit("select_diff_hard", (Constants.PUT_BUTTONS_X, 388))
 
-        elif self.state == StagesOfGameConstants.GAME:
+        elif self.state == StagesOfGameConstants.GAME or self.state == StagesOfGameConstants.END_OF_GAME:
             field_update(screen, field, DIFF, SIZE_OF_BLOCK)
+            
 
 
 class FieldObj:
@@ -123,7 +149,9 @@ class FieldObj:
             return self.texture_size[0]
         elif not self.is_solid and not self.is_bombed:
             return self.texture_size[1]
-        return self.texture_size[0]  # 2 если хотите видеть бомбы, 0 если нет
+        if game_status.state==StagesOfGameConstants.END_OF_GAME:
+            return self.texture_size[2]  # 2 если хотите видеть бомбы, 0 если нет
+        return self.texture_size[0]
 
 
 class ClassForDifficltySelect:
@@ -245,6 +273,8 @@ def field_update(screen_, field, count_field, size_of_block):
     player_x = cordinates * player.player_x + Constants.CUBES_DRAW_WIDTH
     player_y = cordinates * player.player_y + Constants.CUBES_DRAW_WIDTH + size_of_block
     screen_.blit("player", (player_x, player_y))
+    if game_status.state == StagesOfGameConstants.END_OF_GAME:
+        screen_.draw.text("Game Over", (155, 265), color="black", fontsize=75)
 
     counter_flagget_bombs = 0
     for x, y in WHERE_BOMBS:
@@ -261,8 +291,8 @@ def backfront(screen_):
         screen_.fill((100, 100, 100))
     elif game_status.state == StagesOfGameConstants.END_OF_GAME:
         TIMER_TIME[2] = False
-        screen_.fill((0, 0, 0))
-        screen_.draw.text("Game Over", (155, 265), color="white", fontsize=75)
+        screen_.fill((100, 100, 100))
+        #screen_.draw.text("Game Over", (155, 265), color="white", fontsize=75)
     elif game_status.state == StagesOfGameConstants.WIN_OF_GAME:
         TIMER_TIME[2] = False
         screen_.fill((255, 255, 255))
@@ -274,7 +304,6 @@ def timer_on_skreen(screen_):
         remaining = max(0, int(TIMER_TIME[0] - (time.time() - TIMER_TIME[1])))
         screen_.draw.text(str(remaining), (30, 10), fontsize=74)
         screen_.draw.text("time", (35, 55), fontsize=22)
-
 
 DIFF = Difficlty.DEFAULT
 BOMBS_ON_DIFF = Difficlty.DEFAULT_BOMBS
@@ -331,6 +360,8 @@ def on_key_down(key):
             player.break_block()
         elif key == keys.SPACE:
             player.move()
+        elif key == keys.LSHIFT or key == keys.RSHIFT:
+            player.plase_flag()
 
     elif (
         game_status.state == StagesOfGameConstants.END_OF_GAME

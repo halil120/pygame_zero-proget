@@ -1,0 +1,10 @@
+# Windows repository: keep text files with CRLF line endings.
+* text=auto eol=crlf
+
+# Images are binary files and must not be modified by Git's text filters.
+*.png -text -eol -diff
+*.jpg -text -eol -diff
+*.jpeg -text -eol -diff
+*.gif -text -eol -diff
+*.bmp -text -eol -diff
+*.ico -text -eol -diff

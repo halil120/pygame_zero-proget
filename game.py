@@ -22,6 +22,7 @@ class ConstantsStr(Enum):
     COLOR_BLOCK_DEFAULT = images.empty_41
     STONE_TEXTURE = images.stone_41
     BOMB_TEXTURE = images.bomb_41
+    PLAYER_TEXTURE=images.player
 
 
 class Difficlty(IntEnum):
@@ -123,11 +124,20 @@ class StatesOfGame:
 
         elif self.state == StagesOfGameConstants.SELECTING_DIFFICULTY:
 
-            screen.blit("select_diff_easy", (Constants.PUT_BUTTONS_X, 52))
+            if selected_diff_on_keybord==0:
+                screen.blit("select_diff_easy_selected", (Constants.PUT_BUTTONS_X, 52))
+            else:
+                screen.blit("select_diff_easy", (Constants.PUT_BUTTONS_X, 52))
 
-            screen.blit("select_diff_medium", (Constants.PUT_BUTTONS_X, 220))
+            if selected_diff_on_keybord==1:
+                screen.blit("select_diff_medium_selected", (Constants.PUT_BUTTONS_X, 220))
+            else:
+                screen.blit("select_diff_medium", (Constants.PUT_BUTTONS_X, 220))
 
-            screen.blit("select_diff_hard", (Constants.PUT_BUTTONS_X, 388))
+            if selected_diff_on_keybord==2:
+                screen.blit("select_diff_hard_selected", (Constants.PUT_BUTTONS_X, 388))
+            else:
+                screen.blit("select_diff_hard", (Constants.PUT_BUTTONS_X, 388))
 
         elif self.state == StagesOfGameConstants.GAME or self.state == StagesOfGameConstants.END_OF_GAME:
             field_update(screen, field, DIFF, SIZE_OF_BLOCK)
@@ -270,9 +280,16 @@ def field_update(screen_, field, count_field, size_of_block):
                 color="white",
             )
 
-    player_x = cordinates * player.player_x + Constants.CUBES_DRAW_WIDTH
-    player_y = cordinates * player.player_y + Constants.CUBES_DRAW_WIDTH + size_of_block
-    screen_.blit("player", (player_x, player_y))
+    player_x = cordinates * player.player_x + Constants.CUBES_DRAW_WIDTH+DIFF
+    if DIFF==Difficlty.MEDIUM:
+        player_y = cordinates * player.player_y + Constants.CUBES_DRAW_WIDTH + size_of_block*1.5
+    elif DIFF==Difficlty.EASY:
+        player_y = cordinates * player.player_y + Constants.CUBES_DRAW_WIDTH + size_of_block
+    else:
+        player_x = cordinates * player.player_x + Constants.CUBES_DRAW_WIDTH+10
+        player_y = cordinates * player.player_y + Constants.CUBES_DRAW_WIDTH + size_of_block*1.9
+        
+    screen_.blit(pygame.transform.smoothscale(ConstantsStr.PLAYER_TEXTURE.value,(15,25)if DIFF==Difficlty.MEDIUM or DIFF==Difficlty.HARD else (25,35)), (player_x, player_y))
     if game_status.state == StagesOfGameConstants.END_OF_GAME:
         screen_.draw.text("Game Over", (155, 265), color="black", fontsize=75)
 
@@ -321,7 +338,7 @@ TIMER_TIME = [Difficlty.DEFAULT**2, None, False]
 count_of_flags = 0
 player = PlayersClass(0, 0)
 selected_diff_on_keybord = 0
-
+mouse_x,mouse_y=(10,10)
 field = []
 
 
@@ -329,13 +346,15 @@ def draw():
     screen.clear()
 
     backfront(screen)
-
+    
     timer_on_skreen(screen)
 
     game_status.get_game_state(screen)
 
+    screen.blit("cursor_mouse",(mouse_x-5,mouse_y-5))
 
 def update():
+    global mouse_y,mouse_x
     if TIMER_TIME[2] and time.time() - TIMER_TIME[1] >= TIMER_TIME[0]:
         TIMER_TIME[2] = False
     if (
@@ -343,6 +362,12 @@ def update():
         and max(0, int(TIMER_TIME[0] - (time.time() - TIMER_TIME[1]))) == 0
     ):
         game_status.state = StagesOfGameConstants.END_OF_GAME
+        
+    mouse_x,mouse_y=pygame.mouse.get_pos()
+
+    
+            
+        
 
 
 def on_key_down(key):

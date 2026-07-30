@@ -23,6 +23,8 @@ class ConstantsStr(Enum):
     STONE_TEXTURE = images.stone_41
     BOMB_TEXTURE = images.bomb_41
     PLAYER_TEXTURE=images.player
+    CHAMPIONS_TEXTURE=images.champions_button
+    NAME_OF_CHAMPIONS=images.names_of_champions
 
 
 class Difficlty(IntEnum):
@@ -45,6 +47,7 @@ class Difficlty(IntEnum):
 
 class StagesOfGameConstants(Enum):
     MENU = auto()
+    CAMPIONS=auto()
     SELECTING_DIFFICULTY = auto()
     GAME = auto()
     END_OF_GAME = auto()
@@ -121,6 +124,13 @@ class StatesOfGame:
         if self.state == StagesOfGameConstants.MENU:
             screen.fill((40, 136, 235))
             screen.blit("game_button", (130, 60))
+            
+            screen.blit(ConstantsStr.CHAMPIONS_TEXTURE.value, (130, 250))
+
+        if self.state==StagesOfGameConstants.CAMPIONS:
+            screen.fill((40, 136, 235))
+            screen.blit(ConstantsStr.NAME_OF_CHAMPIONS.value, (50, 25))
+            screen.draw.text(str(TIMER_TIME[0] - (time.time() - TIMER_TIME[1])),(70, 45),fontsize=35, color="black")
 
         elif self.state == StagesOfGameConstants.SELECTING_DIFFICULTY:
 
@@ -307,6 +317,7 @@ def backfront(screen_):
     elif game_status.state == StagesOfGameConstants.GAME:
         screen_.fill((100, 100, 100))
     elif game_status.state == StagesOfGameConstants.END_OF_GAME:
+        records.append(TIMER_TIME[1])
         TIMER_TIME[2] = False
         screen_.fill((100, 100, 100))
         #screen_.draw.text("Game Over", (155, 265), color="white", fontsize=75)
@@ -340,7 +351,7 @@ player = PlayersClass(0, 0)
 selected_diff_on_keybord = 0
 mouse_x,mouse_y=(10,10)
 field = []
-
+records=[]
 
 def draw():
     screen.clear()
@@ -362,6 +373,7 @@ def update():
         and max(0, int(TIMER_TIME[0] - (time.time() - TIMER_TIME[1]))) == 0
     ):
         game_status.state = StagesOfGameConstants.END_OF_GAME
+        
         
     mouse_x,mouse_y=pygame.mouse.get_pos()
 
@@ -418,10 +430,14 @@ def on_key_down(key):
                     ClassForDifficltySelect.medium()
             else:
                 ClassForDifficltySelect.easy()
+    
+    elif game_status.state == StagesOfGameConstants.CAMPIONS:
+        if key == keys.SPACE:
+            game_status.state = StagesOfGameConstants.MENU
 
 
 def on_mouse_down(pos, button):
-    global DIFF, BOMBS_ON_DIFF, field, SIZE_OF_BLOCK, SIZE_OF_TEXTURE, TIMER_TIME, WHERE_BOMBS, count_of_flags, player, selected_diff_on_keybord
+    global DIFF, BOMBS_ON_DIFF, field, SIZE_OF_BLOCK, SIZE_OF_TEXTURE, TIMER_TIME, WHERE_BOMBS, count_of_flags, player, selected_diff_on_keybord,records
     x, y = pos
 
     if game_status.state == StagesOfGameConstants.MENU:
@@ -429,6 +445,9 @@ def on_mouse_down(pos, button):
             selected_diff_on_keybord = 0
             game_status.state = StagesOfGameConstants.SELECTING_DIFFICULTY
             player = PlayersClass(0, 0)
+            
+        elif 130<x<430 and 250<y<402:
+            game_status.state = StagesOfGameConstants.CAMPIONS
     elif game_status.state == StagesOfGameConstants.SELECTING_DIFFICULTY:
 
         # danger gome

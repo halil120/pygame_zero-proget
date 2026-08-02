@@ -175,10 +175,10 @@ class FieldObj:
 class ClassForDifficltySelect:
     @staticmethod
     def easy():
-        global DIFF, BOMBS_ON_DIFF, TIMER_TIME, SIZE_OF_TEXTURE, SIZE_OF_BLOCK, field, selected_diff_on_keybord
+        global DIFF, BOMBS_ON_DIFF, TIMER_TIME, SIZE_OF_TEXTURE, SIZE_OF_BLOCK, field,C_F_G_B
         DIFF = Difficlty.EASY
         BOMBS_ON_DIFF = Difficlty.BOMBS_ON_EASY
-        TIMER_TIME = [Difficlty.EASY**2 * 2, time.time(), True]
+        SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
         SIZE_OF_TEXTURE = tuple(
             map(
                 lambda i: pygame.transform.smoothscale(
@@ -187,15 +187,18 @@ class ClassForDifficltySelect:
                 all_images,
             )
         )
+        
+        
+        C_F_G_B=Constants_For_Game_Bild(DIFF,BOMBS_ON_DIFF,SIZE_OF_TEXTURE,SIZE_OF_BLOCK)
         field = field_generate(DIFF, BOMBS_ON_DIFF)
-        SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
+        TIMER_TIME = [C_F_G_B.size_field**2 * 2, time.time(), True]
         game_status.state = StagesOfGameConstants.GAME
 
     def medium():
-        global DIFF, BOMBS_ON_DIFF, TIMER_TIME, SIZE_OF_TEXTURE, SIZE_OF_BLOCK, field, selected_diff_on_keybord
+        global DIFF, BOMBS_ON_DIFF, TIMER_TIME, SIZE_OF_TEXTURE, SIZE_OF_BLOCK, field,C_F_G_B
         DIFF = Difficlty.MEDIUM
         BOMBS_ON_DIFF = Difficlty.BOMBS_ON_MEDIUM
-        TIMER_TIME = [Difficlty.MEDIUM**2 * 2, time.time(), True]
+        SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
         SIZE_OF_TEXTURE = tuple(
             map(
                 lambda i: pygame.transform.smoothscale(
@@ -204,15 +207,17 @@ class ClassForDifficltySelect:
                 all_images,
             )
         )
+        
+        C_F_G_B=Constants_For_Game_Bild(DIFF,BOMBS_ON_DIFF,SIZE_OF_TEXTURE,SIZE_OF_BLOCK,1.5)
         field = field_generate(DIFF, BOMBS_ON_DIFF)
-        SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
+        TIMER_TIME = [C_F_G_B.size_field**2 * 2, time.time(), True]
         game_status.state = StagesOfGameConstants.GAME
 
     def hard():
-        global DIFF, BOMBS_ON_DIFF, TIMER_TIME, SIZE_OF_TEXTURE, SIZE_OF_BLOCK, field, selected_diff_on_keybord
+        global DIFF, BOMBS_ON_DIFF, TIMER_TIME, SIZE_OF_TEXTURE, SIZE_OF_BLOCK, field,C_F_G_B
         DIFF = Difficlty.HARD
         BOMBS_ON_DIFF = Difficlty.BOMBS_ON_HARD
-        TIMER_TIME = [Difficlty.HARD**2 * 2, time.time(), True]
+        SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
         SIZE_OF_TEXTURE = tuple(
             map(
                 lambda i: pygame.transform.smoothscale(
@@ -221,40 +226,63 @@ class ClassForDifficltySelect:
                 all_images,
             )
         )
+        
+        C_F_G_B=Constants_For_Game_Bild(DIFF,BOMBS_ON_DIFF,SIZE_OF_TEXTURE,SIZE_OF_BLOCK,1.9)
         field = field_generate(DIFF, BOMBS_ON_DIFF)
-        SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
+        TIMER_TIME = [C_F_G_B.size_field**2 * 2, time.time(), True]
         game_status.state = StagesOfGameConstants.GAME
 
 
+class Constants_For_Game_Bild:
+    def __init__(self,size_field,count_bombs,size_picture,size_block,center_player_mult=1):
+        self.size_field=size_field
+        self.count_bombs=count_bombs
+        self.size_picture=size_picture
+        self.size_block=size_block
+        self.center_player_mult=center_player_mult
+        self.center_player=None
+        
+    def make_center_player(self,cord,pl_x,pl_y,x_plus):
+        player_x = cord * pl_x + Constants.CUBES_DRAW_WIDTH + x_plus
+        player_y = (cord * pl_y+ Constants.CUBES_DRAW_WIDTH+ self.size_block * self.center_player_mult)
+        return player_x,player_y
+
+
+
+
 def chekc_bombs_nearby(field, x, y):
-    if 0 <= x + 1 < DIFF:
+    if 0 <= x + 1 < C_F_G_B.size_field:
         field[x + 1][y].adjacent_mine_count += 1
-    if 0 <= x - 1 < DIFF:
+    if 0 <= x - 1 < C_F_G_B.size_field:
         field[x - 1][y].adjacent_mine_count += 1
-    if 0 <= y + 1 < DIFF:
+    if 0 <= y + 1 < C_F_G_B.size_field:
         field[x][y + 1].adjacent_mine_count += 1
-    if 0 <= y - 1 < DIFF:
+    if 0 <= y - 1 < C_F_G_B.size_field:
         field[x][y - 1].adjacent_mine_count += 1
 
 
 def field_generate(diff, bombs_on_diff):
+    global C_F_G_B
     from itertools import product
 
     field = []
     for _ in range(diff):
         in_field = []
         for _ in range(diff):
-            in_field.append(FieldObj(SIZE_OF_TEXTURE))
+            in_field.append(FieldObj(C_F_G_B.size_picture))
         field.append(in_field)
     bombs_to_plase = bombs_on_diff
+    
     while bombs_to_plase:
         x = randint(0, diff - 1)
         y = randint(0, diff - 1)
-        if not field[x][y].is_bombed and (x != 0 and y != 0):
+        if not field[x][y].is_bombed and (x != 0 and y != 0) and field[x][y].adjacent_mine_count<1:
             field[x][y].is_bombed = True
             bombs_to_plase -= 1
+            chekc_bombs_nearby(field,x,y)
+            
     # место для добавлении механики чисел около бомб
-    for x, y in product(range(DIFF.value), range(DIFF.value)):
+    for x, y in product(range(C_F_G_B.size_field), range(C_F_G_B.size_field)):
         if field[x][y].is_bombed:
             chekc_bombs_nearby(field, x, y)
             WHERE_BOMBS.append((x, y))
@@ -288,24 +316,7 @@ def field_update(screen_, field, count_field, size_of_block):
                 color="white",
             )
 
-    player_x = cordinates * player.player_x + Constants.CUBES_DRAW_WIDTH + DIFF
-    if DIFF == Difficlty.MEDIUM:
-        player_y = (
-            cordinates * player.player_y
-            + Constants.CUBES_DRAW_WIDTH
-            + size_of_block * 1.5
-        )
-    elif DIFF == Difficlty.EASY:
-        player_y = (
-            cordinates * player.player_y + Constants.CUBES_DRAW_WIDTH + size_of_block
-        )
-    else:
-        player_x = cordinates * player.player_x + Constants.CUBES_DRAW_WIDTH + 10
-        player_y = (
-            cordinates * player.player_y
-            + Constants.CUBES_DRAW_WIDTH
-            + size_of_block * 1.9
-        )
+    player_x,player_y=C_F_G_B.make_center_player(cordinates,player.player_x,player.player_y,13)
 
     screen_.blit(
         pygame.transform.smoothscale(
@@ -318,6 +329,7 @@ def field_update(screen_, field, count_field, size_of_block):
         ),
         (player_x, player_y),
     )
+    
     if game_status.state == StagesOfGameConstants.END_OF_GAME:
         screen_.draw.text("Game Over", (155, 265), color="black", fontsize=75)
 
@@ -325,7 +337,7 @@ def field_update(screen_, field, count_field, size_of_block):
     for x, y in WHERE_BOMBS:
         if field[x][y].is_flagget:
             counter_flagget_bombs += 1
-    if counter_flagget_bombs == count_of_flags and count_of_flags == BOMBS_ON_DIFF:
+    if counter_flagget_bombs == count_of_flags and count_of_flags == C_F_G_B.count_bombs:
         game_status.state = StagesOfGameConstants.WIN_OF_GAME
 
 
@@ -415,10 +427,6 @@ def draw_name_input(screen):
     screen.draw.text("Enter - Save",center=(WIDTH // 2, 330),fontsize=25,color="white")
 
 
-DIFF = Difficlty.DEFAULT
-BOMBS_ON_DIFF = Difficlty.DEFAULT_BOMBS
-SIZE_OF_TEXTURE = 20
-SIZE_OF_BLOCK = 0
 WHERE_BOMBS = []
 MAX_NAME_LENGHT=12
 all_images = (
@@ -438,7 +446,6 @@ selected_diff_on_mouse = 0
 selected_diff_on_keybord = 0
 
 mouse_x, mouse_y = (10, 10)
-field = []
 DICT_FOR_FNC = {0: "easy", 1: "medium", 2: "hard"}
 
 records_path = Path("records.json")
@@ -544,7 +551,7 @@ def on_key_down(key,unicode):
 
 
 def on_mouse_down(pos, button):
-    global DIFF, BOMBS_ON_DIFF, field, SIZE_OF_BLOCK, SIZE_OF_TEXTURE, TIMER_TIME, WHERE_BOMBS, count_of_flags, player, selected_diff_on_keybord, records, selected_diff_on_mouse
+    global count_of_flags, player, selected_diff_on_keybord, selected_diff_on_mouse
     x, y = pos
 
     if game_status.state == StagesOfGameConstants.MENU:

@@ -168,7 +168,7 @@ class FieldObj:
             return self.texture_size[1]
         if game_status.state == StagesOfGameConstants.END_OF_GAME:
             return self.texture_size[2]  
-        return self.texture_size[2]   # 2 если хотите видеть бомбы, 0 если нет
+        return self.texture_size[0]   # 2 если хотите видеть бомбы, 0 если нет
 
 
 class ClassForDifficltySelect:
@@ -280,6 +280,7 @@ class Keybord_On:
 class Mouse_On:
     @staticmethod
     def state_GAME(x,y,button):
+        global count_of_flags
         change_x = (x - Constants.CUBES_DRAW_WIDTH) // (
             C_F_G_B.size_block + Constants.CELL_SPACING
         )
@@ -386,6 +387,15 @@ def chekc_bombs_nearby(field, x, y):
         field[x][y + 1].adjacent_mine_count += 1
     if 0 <= y - 1 < C_F_G_B.size_field:
         field[x][y - 1].adjacent_mine_count += 1
+        
+    if 0 <= x + 1 < C_F_G_B.size_field and 0 <= y + 1 < C_F_G_B.size_field:
+        field[x + 1][y + 1].adjacent_mine_count += 1
+    if 0 <= x - 1 < C_F_G_B.size_field and 0 <= y + 1 < C_F_G_B.size_field:
+        field[x - 1][y + 1].adjacent_mine_count += 1
+    if 0 <= y - 1 < C_F_G_B.size_field and 0 <= x + 1 < C_F_G_B.size_field:
+        field[x + 1][y - 1].adjacent_mine_count += 1
+    if 0 <= y - 1 < C_F_G_B.size_field and 0 <= x - 1 < C_F_G_B.size_field:
+        field[x - 1][y - 1].adjacent_mine_count += 1
 
 
 def field_generate(diff, bombs_on_diff):
@@ -610,22 +620,22 @@ def update():
 
 def on_key_down(key,unicode):
     if game_status.state == StagesOfGameConstants.GAME:
-        Keybord_Mouse_On.state_GAME(key)
+        Keybord_On.state_GAME(key)
         
     elif game_status.state == StagesOfGameConstants.END_OF_GAME or game_status.state == StagesOfGameConstants.WIN_OF_GAME:
-        Keybord_Mouse_On.state_WIN_OR_LOSE(key)
+        Keybord_On.state_WIN_OR_LOSE(key)
             
     elif game_status.state == StagesOfGameConstants.MENU:
-        Keybord_Mouse_On.state_MENU(key)
+        Keybord_On.state_MENU(key)
 
     elif game_status.state == StagesOfGameConstants.SELECTING_DIFFICULTY:
-        Keybord_Mouse_On.state_SELCT_DIFF(key)
+        Keybord_On.state_SELCT_DIFF(key)
 
     elif game_status.state == StagesOfGameConstants.CAMPIONS:
-        Keybord_Mouse_On.state_CHAMP(key) 
+        Keybord_On.state_CHAMP(key) 
             
     elif game_status.state == StagesOfGameConstants.ENTER_NAME:
-        Keybord_Mouse_On.state_ENTER_NAME(key,unicode)
+        Keybord_On.state_ENTER_NAME(key,unicode)
 
 
 def on_mouse_down(pos, button):

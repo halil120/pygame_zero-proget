@@ -29,22 +29,21 @@ class ConstantsStr(Enum):
     NAME_OF_CHAMPIONS = images.names_of_champions
 
 
-class Difficlty(IntEnum):
-    EASY = 8
-    BOMBS_ON_EASY = 10
-    TEXTURES_ON_EASY = 62
+DIFFICLTY={
+'EASY' : {'field_size': 8,
+        'bombs':10,
+        'textures':62,
+        'mulpt_player':1.0},
 
-    MEDIUM = 12
-    BOMBS_ON_MEDIUM = 12
-    TEXTURES_ON_MEDIUM = 41
-
-    HARD = 16
-    BOMBS_ON_HARD = 25
-    TEXTURES_ON_HARD = 31
-
-    DEFAULT = 2
-    DEFAULT_BOMBS = 1
-    TEXTURES_ON_DEFAULT = 250
+'MEDIUM' : {'field_size': 12,
+        'bombs':11,
+        'textures':41,
+        'mulpt_player':1.5},
+'HARD' : {'field_size': 16,
+            'bombs':25,
+            'textures':31,
+            'mulpt_player':1.9},
+}     
 
 
 class StagesOfGameConstants(Enum):
@@ -72,7 +71,7 @@ class PlayersClass:
 
     def move(self):
         x, y = self.looking_to
-        if 0 <= self.player_x + x < DIFF and 0 <= self.player_y + y < DIFF:
+        if 0 <= self.player_x + x < C_F_G_B.size_field and 0 <= self.player_y + y < C_F_G_B.size_field:
             move_to = field[self.player_x + x][self.player_y + y]
             if not move_to.is_solid:
                 self.player_x += x
@@ -80,7 +79,7 @@ class PlayersClass:
 
     def break_block(self):
         x, y = self.looking_to
-        if 0 <= self.player_x + x < DIFF and 0 <= self.player_y + y < DIFF:
+        if 0 <= self.player_x + x < C_F_G_B.size_field and 0 <= self.player_y + y < C_F_G_B.size_field:
             break_what = field[self.player_x + x][self.player_y + y]
             if break_what.is_bombed:
                 game_status.state = StagesOfGameConstants.END_OF_GAME
@@ -90,7 +89,7 @@ class PlayersClass:
     def plase_flag(self):
         global count_of_flags
         x, y = self.looking_to
-        if 0 <= self.player_x + x < DIFF and 0 <= self.player_y + y < DIFF:
+        if 0 <= self.player_x + x < C_F_G_B.size_field and 0 <= self.player_y + y < C_F_G_B.size_field:
             field_x_y = field[self.player_x + x][self.player_y + y]
 
             if field_x_y.is_solid and not field_x_y.is_flagget:
@@ -146,7 +145,7 @@ class StatesOfGame:
             self.state == StagesOfGameConstants.GAME
             or self.state == StagesOfGameConstants.END_OF_GAME
         ):
-            field_update(screen, field, DIFF, SIZE_OF_BLOCK)
+            field_update(screen, field, C_F_G_B.size_field, C_F_G_B.size_block)
 
         elif self.state == StagesOfGameConstants.ENTER_NAME:
             draw_name_input(screen)
@@ -173,65 +172,21 @@ class FieldObj:
 
 
 class ClassForDifficltySelect:
+    global_diff=None
     @staticmethod
-    def easy():
-        global DIFF, BOMBS_ON_DIFF, TIMER_TIME, SIZE_OF_TEXTURE, SIZE_OF_BLOCK, field,C_F_G_B
-        DIFF = Difficlty.EASY
-        BOMBS_ON_DIFF = Difficlty.BOMBS_ON_EASY
-        SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
-        SIZE_OF_TEXTURE = tuple(
-            map(
-                lambda i: pygame.transform.smoothscale(
-                    i, (Difficlty.TEXTURES_ON_EASY, Difficlty.TEXTURES_ON_EASY)
-                ),
-                all_images,
-            )
-        )
+    def diff_selector(diff):
+        global C_F_G_B,field,TIMER_TIME,game_status
+        SIZE_FIELD=DIFFICLTY[diff]['field_size']
+        BOMBS_COUNT=DIFFICLTY[diff]['bombs']
+        TEXTURE_SIZE=tuple(pygame.transform.smoothscale(i,(DIFFICLTY[diff]['textures'],DIFFICLTY[diff]['textures'])) for i in all_images)
+        SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // SIZE_FIELD
+        global_diff=diff
         
-        
-        C_F_G_B=Constants_For_Game_Bild(DIFF,BOMBS_ON_DIFF,SIZE_OF_TEXTURE,SIZE_OF_BLOCK)
-        field = field_generate(DIFF, BOMBS_ON_DIFF)
-        TIMER_TIME = [C_F_G_B.size_field**2 * 2, time.time(), True]
+        C_F_G_B=Constants_For_Game_Bild(SIZE_FIELD,BOMBS_COUNT,TEXTURE_SIZE,SIZE_OF_BLOCK,DIFFICLTY[diff]['mulpt_player'])
+        field = field_generate(SIZE_FIELD, BOMBS_COUNT)
+        TIMER_TIME = [SIZE_FIELD**2 * 2, time.time(), True]
         game_status.state = StagesOfGameConstants.GAME
-
-    def medium():
-        global DIFF, BOMBS_ON_DIFF, TIMER_TIME, SIZE_OF_TEXTURE, SIZE_OF_BLOCK, field,C_F_G_B
-        DIFF = Difficlty.MEDIUM
-        BOMBS_ON_DIFF = Difficlty.BOMBS_ON_MEDIUM
-        SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
-        SIZE_OF_TEXTURE = tuple(
-            map(
-                lambda i: pygame.transform.smoothscale(
-                    i, (Difficlty.TEXTURES_ON_MEDIUM, Difficlty.TEXTURES_ON_MEDIUM)
-                ),
-                all_images,
-            )
-        )
         
-        C_F_G_B=Constants_For_Game_Bild(DIFF,BOMBS_ON_DIFF,SIZE_OF_TEXTURE,SIZE_OF_BLOCK,1.5)
-        field = field_generate(DIFF, BOMBS_ON_DIFF)
-        TIMER_TIME = [C_F_G_B.size_field**2 * 2, time.time(), True]
-        game_status.state = StagesOfGameConstants.GAME
-
-    def hard():
-        global DIFF, BOMBS_ON_DIFF, TIMER_TIME, SIZE_OF_TEXTURE, SIZE_OF_BLOCK, field,C_F_G_B
-        DIFF = Difficlty.HARD
-        BOMBS_ON_DIFF = Difficlty.BOMBS_ON_HARD
-        SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // DIFF
-        SIZE_OF_TEXTURE = tuple(
-            map(
-                lambda i: pygame.transform.smoothscale(
-                    i, (Difficlty.TEXTURES_ON_HARD, Difficlty.TEXTURES_ON_HARD)
-                ),
-                all_images,
-            )
-        )
-        
-        C_F_G_B=Constants_For_Game_Bild(DIFF,BOMBS_ON_DIFF,SIZE_OF_TEXTURE,SIZE_OF_BLOCK,1.9)
-        field = field_generate(DIFF, BOMBS_ON_DIFF)
-        TIMER_TIME = [C_F_G_B.size_field**2 * 2, time.time(), True]
-        game_status.state = StagesOfGameConstants.GAME
-
 
 class Constants_For_Game_Bild:
     def __init__(self,size_field,count_bombs,size_picture,size_block,center_player_mult=1):
@@ -307,7 +262,7 @@ def field_update(screen_, field, count_field, size_of_block):
         if not field[x][y].is_solid:
             screen_.draw.text(
                 str(
-                    field[x][y].adjacent_mine_count
+                    field[x][y].adjacent_mine_count//2
                     if field[x][y].adjacent_mine_count
                     else ""
                 ),
@@ -323,7 +278,7 @@ def field_update(screen_, field, count_field, size_of_block):
             ConstantsStr.PLAYER_TEXTURE.value,
             (
                 (15, 25)
-                if DIFF == Difficlty.MEDIUM or DIFF == Difficlty.HARD
+                if ClassForDifficltySelect.global_diff == 'MEDIUM' or 'HARD'
                 else (25, 35)
             ),
         ),
@@ -436,7 +391,7 @@ all_images = (
 )
 game_status = StatesOfGame()
 SAZE_OF_PICTYRE = images.select_diff_medium.get_size()
-TIMER_TIME = [Difficlty.DEFAULT**2, None, False]
+TIMER_TIME = [0, None, False]
 count_of_flags = 0
 player = PlayersClass(0, 0)
 player_name=''
@@ -526,11 +481,11 @@ def on_key_down(key,unicode):
         if key == keys.RETURN:
             if selected_diff_on_keybord:
                 if selected_diff_on_keybord - 1:
-                    ClassForDifficltySelect.hard()
+                    ClassForDifficltySelect.diff_selector('HARD')
                 else:
-                    ClassForDifficltySelect.medium()
+                    ClassForDifficltySelect.diff_selector('MEDIUM')
             else:
-                ClassForDifficltySelect.easy()
+                ClassForDifficltySelect.diff_selector('EASY')
 
     elif game_status.state == StagesOfGameConstants.CAMPIONS:
         if key == keys.SPACE:
@@ -551,7 +506,7 @@ def on_key_down(key,unicode):
 
 
 def on_mouse_down(pos, button):
-    global count_of_flags, player, selected_diff_on_keybord, selected_diff_on_mouse
+    global count_of_flags, player, selected_diff_on_keybord, selected_diff_on_mouse,WHERE_BOMBS
     x, y = pos
 
     if game_status.state == StagesOfGameConstants.MENU:
@@ -575,37 +530,37 @@ def on_mouse_down(pos, button):
             Constants.PUT_BUTTONS_X < x < SAZE_OF_PICTYRE[0] + Constants.PUT_BUTTONS_X
             and 52 < y < SAZE_OF_PICTYRE[1] + 52
         ):
-            ClassForDifficltySelect.easy()
+            ClassForDifficltySelect.diff_selector('EASY')
 
         elif (
             Constants.PUT_BUTTONS_X < x < SAZE_OF_PICTYRE[0] + Constants.PUT_BUTTONS_X
             and 220 < y < SAZE_OF_PICTYRE[1] + 220
         ):
             selected_diff_on_mouse += 1
-            ClassForDifficltySelect.medium()
+            ClassForDifficltySelect.diff_selector('MEDIUM')
 
         elif (
             Constants.PUT_BUTTONS_X < x < SAZE_OF_PICTYRE[0] + Constants.PUT_BUTTONS_X
             and 388 < y < SAZE_OF_PICTYRE[1] + 388
         ):
             selected_diff_on_mouse += 2
-            ClassForDifficltySelect.hard()
+            ClassForDifficltySelect.diff_selector('HARD')
 
             # danger gome
 
     elif game_status.state == StagesOfGameConstants.GAME:
 
         change_x = (x - Constants.CUBES_DRAW_WIDTH) // (
-            SIZE_OF_BLOCK + Constants.CELL_SPACING
+            C_F_G_B.size_block + Constants.CELL_SPACING
         )
         change_y = (y - Constants.CUBES_DRAW_HEIGHT) // (
-            SIZE_OF_BLOCK + Constants.CELL_SPACING
+            C_F_G_B.size_block + Constants.CELL_SPACING
         )
-        if 0 <= change_x < DIFF and 0 <= change_y < DIFF:
+        if 0 <= change_x < C_F_G_B.size_field and 0 <= change_y < C_F_G_B.size_field:
             field_x_y = field[change_x][change_y]
             if (
-                change_x < DIFF
-                and change_y < DIFF
+                change_x < C_F_G_B.size_field
+                and change_y < C_F_G_B.size_field
                 and field_x_y.is_solid
                 and not field_x_y.is_bombed
                 and not field_x_y.is_flagget
@@ -614,8 +569,8 @@ def on_mouse_down(pos, button):
                 field_x_y.is_solid = False
                 field_x_y.is_flagget = False
             elif (
-                change_x < DIFF
-                and change_y < DIFF
+                change_x < C_F_G_B.size_field
+                and change_y < C_F_G_B.size_field
                 and field_x_y.is_solid
                 and not field_x_y.is_flagget
                 and button == mouse.RIGHT
@@ -623,8 +578,8 @@ def on_mouse_down(pos, button):
                 field_x_y.is_flagget = True
                 count_of_flags += 1
             elif (
-                change_x < DIFF
-                and change_y < DIFF
+                change_x < C_F_G_B.size_field
+                and change_y < C_F_G_B.size_field
                 and field_x_y.is_solid
                 and field_x_y.is_flagget
                 and button == mouse.RIGHT
@@ -632,8 +587,8 @@ def on_mouse_down(pos, button):
                 field_x_y.is_flagget = False
                 count_of_flags -= 1
             elif (
-                change_x < DIFF
-                and change_y < DIFF
+                change_x < C_F_G_B.size_field
+                and change_y < C_F_G_B.size_field
                 and field_x_y.is_solid
                 and field_x_y.is_bombed
                 and not field_x_y.is_flagget

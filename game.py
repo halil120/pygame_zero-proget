@@ -11,7 +11,7 @@ WIDTH = 560
 
 
 class Constants(IntEnum):
-    ONE_CUBE_ON_PIXELS = 60  # 23
+    ONE_CUBE_ON_PIXELS = 60
     CELL_SPACING = 1
     START_CUBES_X = 100
     CUBES_DRAW_WIDTH = 25
@@ -100,8 +100,6 @@ class PlayersClass:
                 count_of_flags -= 1
 
     def change_looking_to(self, rotation):
-        # x,y=rotation.value
-        # self.looking_to=(self.player_x+x,self.player_y+y)
         self.looking_to = rotation.value
 
 
@@ -124,22 +122,11 @@ class StatesOfGame:
 
         elif self.state == StagesOfGameConstants.SELECTING_DIFFICULTY:
 
-            if selected_diff_on_keybord == 0:
-                screen.blit("select_diff_easy_selected", (Constants.PUT_BUTTONS_X, 52))
-            else:
-                screen.blit("select_diff_easy", (Constants.PUT_BUTTONS_X, 52))
+            screen.blit("select_diff_easy", (Constants.PUT_BUTTONS_X, 52))
 
-            if selected_diff_on_keybord == 1:
-                screen.blit(
-                    "select_diff_medium_selected", (Constants.PUT_BUTTONS_X, 220)
-                )
-            else:
-                screen.blit("select_diff_medium", (Constants.PUT_BUTTONS_X, 220))
+            screen.blit("select_diff_medium", (Constants.PUT_BUTTONS_X, 220))
 
-            if selected_diff_on_keybord == 2:
-                screen.blit("select_diff_hard_selected", (Constants.PUT_BUTTONS_X, 388))
-            else:
-                screen.blit("select_diff_hard", (Constants.PUT_BUTTONS_X, 388))
+            screen.blit("select_diff_hard", (Constants.PUT_BUTTONS_X, 388))
 
         elif (
             self.state == StagesOfGameConstants.GAME
@@ -182,12 +169,10 @@ class Timer:
         self.time_elapsed=time.time()
         
     def stop_timer(self):
-        self.is_timer_running=False
-        
+        self.is_timer_running=False    
 
 
 class ClassForDifficltySelect:
-    global_diff=None
     @staticmethod
     def diff_selector(diff):
         global C_F_G_B,field,TIMER_TIME,game_status
@@ -195,10 +180,9 @@ class ClassForDifficltySelect:
         BOMBS_COUNT=DIFFICLTY[diff]['bombs']
         TEXTURE_SIZE=tuple(pygame.transform.smoothscale(i,(DIFFICLTY[diff]['textures'],DIFFICLTY[diff]['textures'])) for i in all_images)
         SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // SIZE_FIELD
-        global_diff=diff
         
         C_F_G_B=ConstantsForGameBild(SIZE_FIELD,BOMBS_COUNT,TEXTURE_SIZE,SIZE_OF_BLOCK,DIFFICLTY[diff]['mulpt_player'])
-        field = field_generate(SIZE_FIELD, BOMBS_COUNT)
+        field = field_generate(SIZE_FIELD)
         TIMER_TIME = Timer(SIZE_FIELD**2 * 2)
         TIMER_TIME.start_timer()
         game_status.state = StagesOfGameConstants.GAME
@@ -210,80 +194,10 @@ class ConstantsForGameBild:
         self.count_bombs=count_bombs
         self.size_picture=size_picture
         self.size_block=size_block
-        self.center_player_mult=center_player_mult
-        self.center_player=None
-        self.player_pixel=pygame.transform.smoothscale(
-            ConstantsStr.PLAYER_TEXTURE.value,(
-                (15, 25)
-                if ClassForDifficltySelect.global_diff == 'MEDIUM' or 'HARD'
-                else (25, 35)),)
         
-    def make_center_player(self,cord,pl_x,pl_y,x_plus):
-        player_x = cord * pl_x + Constants.CUBES_DRAW_WIDTH + x_plus
-        player_y = (cord * pl_y+ Constants.CUBES_DRAW_WIDTH+ self.size_block * self.center_player_mult)
-        return player_x,player_y
 
 
-class Keybord_On:
-    @staticmethod
-    def state_GAME(key):
-        if key == keys.D:
-            player.change_looking_to(Rotations.D)
-        elif key == keys.A:
-            player.change_looking_to(Rotations.A)
-        elif key == keys.W:
-            player.change_looking_to(Rotations.W)
-        elif key == keys.S:
-            player.change_looking_to(Rotations.S)
-        elif key == keys.RETURN:
-            player.break_block()
-        elif key == keys.SPACE:
-            player.move()
-        elif key == keys.LSHIFT or key == keys.RSHIFT:
-            player.plase_flag()
-
-    @staticmethod
-    def state_WIN_OR_LOSE(key):
-        global selected_diff_on_keybord,WHERE_BOMBS,count_of_flags
-        if game_status.state == StagesOfGameConstants.WIN_OF_GAME:
-            game_status.state = StagesOfGameConstants.ENTER_NAME
-        else:
-            if key == keys.RETURN:
-
-                selected_diff_on_keybord = 0
-                game_status.state = StagesOfGameConstants.MENU
-        WHERE_BOMBS = []
-        count_of_flags = 0
-        
-    @staticmethod
-    def state_MENU(key):
-        global player
-        if key == keys.RETURN:
-            game_status.state = StagesOfGameConstants.SELECTING_DIFFICULTY
-            player = PlayersClass(0, 0)
-
-    @staticmethod
-    def state_SELCT_DIFF(key):
-        global selected_diff_on_keybord
-        if key == keys.W:
-            selected_diff_on_keybord = max(selected_diff_on_keybord - 1, 0)
-        elif key == keys.S:
-            selected_diff_on_keybord = min(selected_diff_on_keybord + 1, 2)
-
-        if key == keys.RETURN:
-            if selected_diff_on_keybord:
-                if selected_diff_on_keybord - 1:
-                    ClassForDifficltySelect.diff_selector('HARD')
-                else:
-                    ClassForDifficltySelect.diff_selector('MEDIUM')
-            else:
-                ClassForDifficltySelect.diff_selector('EASY')
-                
-    @staticmethod
-    def state_CHAMP(key):
-        if key == keys.SPACE:
-            game_status.state = StagesOfGameConstants.MENU
-                
+class Keybord_On:         
     @staticmethod
     def state_ENTER_NAME(key,unicode):
         global player_name, MAX_NAME_LENGHT
@@ -301,7 +215,7 @@ class Keybord_On:
 class Mouse_On:
     @staticmethod
     def state_GAME(x,y,button):
-        global count_of_flags
+        global count_of_flags,count_of_klics
         change_x = (x - Constants.CUBES_DRAW_WIDTH) // (
             C_F_G_B.size_block + Constants.CELL_SPACING
         )
@@ -309,6 +223,9 @@ class Mouse_On:
             C_F_G_B.size_block + Constants.CELL_SPACING
         )
         if 0 <= change_x < C_F_G_B.size_field and 0 <= change_y < C_F_G_B.size_field:
+            count_of_klics+=1
+            if count_of_klics<2:
+                bombs_gerate(change_x,change_y)
             field_x_y = field[change_x][change_y]
             if (
                 change_x < C_F_G_B.size_field
@@ -361,12 +278,13 @@ class Mouse_On:
         
     @staticmethod
     def state_MENU(x,y):
-        global selected_diff_on_keybord,selected_diff_on_mouse,player
+        global selected_diff_on_keybord,selected_diff_on_mouse,player,count_of_klics
         if 130 < x < 430 and 60 < y < 212:
             selected_diff_on_keybord = 0
             selected_diff_on_mouse = 0
             game_status.state = StagesOfGameConstants.SELECTING_DIFFICULTY
             player = PlayersClass(0, 0)
+            count_of_klics=0
 
         elif 130 < x < 430 and 250 < y < 402:
             game_status.state = StagesOfGameConstants.CAMPIONS
@@ -420,7 +338,7 @@ def chekc_bombs_nearby(field, x, y):
         field[x - 1][y - 1].adjacent_mine_count += 1
 
 
-def field_generate(diff, bombs_on_diff):
+def field_generate(diff):
     global C_F_G_B
     from itertools import product
 
@@ -430,21 +348,13 @@ def field_generate(diff, bombs_on_diff):
         for _ in range(diff):
             in_field.append(FieldObj(C_F_G_B.size_picture))
         field.append(in_field)
-    bombs_to_plase = bombs_on_diff
     
-    while bombs_to_plase:
-        x = randint(0, diff - 1)
-        y = randint(0, diff - 1)
-        if not field[x][y].is_bombed and (x != 0 and y != 0) and field[x][y].adjacent_mine_count<1:
-            field[x][y].is_bombed = True
-            bombs_to_plase -= 1
-            chekc_bombs_nearby(field,x,y)
+    
             
     # место для добавлении механики чисел около бомб
     for x, y in product(range(C_F_G_B.size_field), range(C_F_G_B.size_field)):
         if field[x][y].is_bombed:
             chekc_bombs_nearby(field, x, y)
-            WHERE_BOMBS.append((x, y))
 
     # место для добавлении механики чисел около бомб
     return field
@@ -466,7 +376,7 @@ def field_update(screen_, field, count_field, size_of_block):
         if not field[x][y].is_solid:
             screen_.draw.text(
                 str(
-                    field[x][y].adjacent_mine_count//2
+                    field[x][y].adjacent_mine_count
                     if field[x][y].adjacent_mine_count
                     else ""
                 ),
@@ -475,10 +385,7 @@ def field_update(screen_, field, count_field, size_of_block):
                 color="white",
             )
 
-    player_x,player_y=C_F_G_B.make_center_player(cordinates,player.player_x,player.player_y,13)
 
-    screen_.blit(C_F_G_B.player_pixel,(player_x, player_y),)
-    
     if game_status.state == StagesOfGameConstants.END_OF_GAME:
         screen_.draw.text("Game Over", (155, 265), color="black", fontsize=75)
 
@@ -488,6 +395,18 @@ def field_update(screen_, field, count_field, size_of_block):
             counter_flagget_bombs += 1
     if counter_flagget_bombs == count_of_flags and count_of_flags == C_F_G_B.count_bombs:
         game_status.state = StagesOfGameConstants.WIN_OF_GAME
+
+
+def bombs_gerate(xd,yd):
+    bombs_to_plase = C_F_G_B.count_bombs
+    while bombs_to_plase:
+        x = randint(0, C_F_G_B.size_field - 1)
+        y = randint(0, C_F_G_B.size_field - 1)
+        if not field[x][y].is_bombed and (x!=xd and y!=yd):
+            field[x][y].is_bombed = True
+            bombs_to_plase -= 1
+            chekc_bombs_nearby(field,x,y)
+            WHERE_BOMBS.append((x, y))
 
 
 def backfront(screen_):
@@ -587,9 +506,8 @@ game_status = StatesOfGame()
 SAZE_OF_PICTYRE = images.select_diff_medium.get_size()
 TIMER_TIME = Timer()
 count_of_flags = 0
-player = PlayersClass(0, 0)
 player_name=''
-
+count_of_klics=0
 
 selected_diff_on_mouse = 0
 selected_diff_on_keybord = 0
@@ -622,7 +540,7 @@ def update():
         TIMER_TIME.stop_timer()
     if (
         TIMER_TIME.is_timer_running
-        and max(0, int(TIMER_TIME.time_elapsed - (time.time() - TIMER_TIME.time_elapsed))) == 0
+        and max(0, int(TIMER_TIME.start_time - (time.time() - TIMER_TIME.time_elapsed))) == 0
     ):
         game_status.state = StagesOfGameConstants.END_OF_GAME
 
@@ -630,22 +548,7 @@ def update():
 
 
 def on_key_down(key,unicode):
-    if game_status.state == StagesOfGameConstants.GAME:
-        Keybord_On.state_GAME(key)
-        
-    elif game_status.state == StagesOfGameConstants.END_OF_GAME or game_status.state == StagesOfGameConstants.WIN_OF_GAME:
-        Keybord_On.state_WIN_OR_LOSE(key)
-            
-    elif game_status.state == StagesOfGameConstants.MENU:
-        Keybord_On.state_MENU(key)
-
-    elif game_status.state == StagesOfGameConstants.SELECTING_DIFFICULTY:
-        Keybord_On.state_SELCT_DIFF(key)
-
-    elif game_status.state == StagesOfGameConstants.CAMPIONS:
-        Keybord_On.state_CHAMP(key) 
-            
-    elif game_status.state == StagesOfGameConstants.ENTER_NAME:
+    if game_status.state == StagesOfGameConstants.ENTER_NAME:
         Keybord_On.state_ENTER_NAME(key,unicode)
 
 

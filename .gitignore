@@ -3,3 +3,4 @@ game_with_jump(frozen).py
 \.agents
 *.pyc
 \__pycache__
+records.json

@@ -36,7 +36,7 @@ DIFFICLTY={
         'mulpt_player':1.0},
 
 'MEDIUM' : {'field_size': 12,
-        'bombs':11,
+        'bombs':14,
         'textures':41,
         'mulpt_player':1.5},
 'HARD' : {'field_size': 16,
@@ -171,6 +171,21 @@ class FieldObj:
         return self.texture_size[0]   # 2 если хотите видеть бомбы, 0 если нет
 
 
+class Timer:
+    def __init__(self,start_time=0):
+        self.start_time=start_time
+        self.is_timer_running=False
+        self.time_elapsed=None
+        
+    def start_timer(self):
+        self.is_timer_running=True
+        self.time_elapsed=time.time()
+        
+    def stop_timer(self):
+        self.is_timer_running=False
+        
+
+
 class ClassForDifficltySelect:
     global_diff=None
     @staticmethod
@@ -182,13 +197,14 @@ class ClassForDifficltySelect:
         SIZE_OF_BLOCK = (min(WIDTH, HEIGHT) - Constants.ONE_CUBE_ON_PIXELS) // SIZE_FIELD
         global_diff=diff
         
-        C_F_G_B=Constants_For_Game_Bild(SIZE_FIELD,BOMBS_COUNT,TEXTURE_SIZE,SIZE_OF_BLOCK,DIFFICLTY[diff]['mulpt_player'])
+        C_F_G_B=ConstantsForGameBild(SIZE_FIELD,BOMBS_COUNT,TEXTURE_SIZE,SIZE_OF_BLOCK,DIFFICLTY[diff]['mulpt_player'])
         field = field_generate(SIZE_FIELD, BOMBS_COUNT)
-        TIMER_TIME = [SIZE_FIELD**2 * 2, time.time(), True]
+        TIMER_TIME = Timer(SIZE_FIELD**2 * 2)
+        TIMER_TIME.start_timer()
         game_status.state = StagesOfGameConstants.GAME
         
 
-class Constants_For_Game_Bild:
+class ConstantsForGameBild:
     def __init__(self,size_field,count_bombs,size_picture,size_block,center_player_mult=1):
         self.size_field=size_field
         self.count_bombs=count_bombs
@@ -196,6 +212,11 @@ class Constants_For_Game_Bild:
         self.size_block=size_block
         self.center_player_mult=center_player_mult
         self.center_player=None
+        self.player_pixel=pygame.transform.smoothscale(
+            ConstantsStr.PLAYER_TEXTURE.value,(
+                (15, 25)
+                if ClassForDifficltySelect.global_diff == 'MEDIUM' or 'HARD'
+                else (25, 35)),)
         
     def make_center_player(self,cord,pl_x,pl_y,x_plus):
         player_x = cord * pl_x + Constants.CUBES_DRAW_WIDTH + x_plus
@@ -340,6 +361,7 @@ class Mouse_On:
         
     @staticmethod
     def state_MENU(x,y):
+        global selected_diff_on_keybord,selected_diff_on_mouse,player
         if 130 < x < 430 and 60 < y < 212:
             selected_diff_on_keybord = 0
             selected_diff_on_mouse = 0
@@ -455,17 +477,7 @@ def field_update(screen_, field, count_field, size_of_block):
 
     player_x,player_y=C_F_G_B.make_center_player(cordinates,player.player_x,player.player_y,13)
 
-    screen_.blit(
-        pygame.transform.smoothscale(
-            ConstantsStr.PLAYER_TEXTURE.value,
-            (
-                (15, 25)
-                if ClassForDifficltySelect.global_diff == 'MEDIUM' or 'HARD'
-                else (25, 35)
-            ),
-        ),
-        (player_x, player_y),
-    )
+    screen_.blit(C_F_G_B.player_pixel,(player_x, player_y),)
     
     if game_status.state == StagesOfGameConstants.END_OF_GAME:
         screen_.draw.text("Game Over", (155, 265), color="black", fontsize=75)
@@ -485,12 +497,11 @@ def backfront(screen_):
     elif game_status.state == StagesOfGameConstants.GAME:
         screen_.fill((100, 100, 100))
     elif game_status.state == StagesOfGameConstants.END_OF_GAME:
-        TIMER_TIME[2] = False
+        TIMER_TIME.stop_timer()
         screen_.fill((100, 100, 100))
-        # screen_.draw.text("Game Over", (155, 265), color="white", fontsize=75)
     elif game_status.state == StagesOfGameConstants.WIN_OF_GAME:
-        TIMER_TIME[2] = False
-        timer_end=int(time.time() - TIMER_TIME[1])
+        TIMER_TIME.stop_timer()
+        timer_end=int(time.time() - TIMER_TIME.time_elapsed)
         screen_.fill((255, 255, 255))
         screen_.draw.text("You Win", (175, 265), color="black", fontsize=75)
     elif game_status.state == StagesOfGameConstants.ENTER_NAME:
@@ -498,8 +509,8 @@ def backfront(screen_):
 
 
 def timer_on_skreen(screen_):
-    if TIMER_TIME[2]:
-        remaining = max(0, int(TIMER_TIME[0] - (time.time() - TIMER_TIME[1])))
+    if TIMER_TIME.is_timer_running:
+        remaining = max(0, int(TIMER_TIME.start_time - (time.time() - TIMER_TIME.time_elapsed)))
         screen_.draw.text(str(remaining), (30, 10), fontsize=74)
         screen_.draw.text("time", (35, 55), fontsize=22)
 
@@ -548,7 +559,7 @@ def save_in_json(timer_end):
     records_loaded[DICT_FOR_FNC[selected_diff_on_mouse]].append(
         {
             "name": player_name,
-            "time": str(timer_end),#TIMER_TIME[0]-(max(0, int(TIMER_TIME[0] - (time.time() - TIMER_TIME[1]))))
+            "time": str(timer_end),
         }
     )
     with open("records.json", "w", encoding="utf-8") as file:
@@ -574,7 +585,7 @@ all_images = (
 )
 game_status = StatesOfGame()
 SAZE_OF_PICTYRE = images.select_diff_medium.get_size()
-TIMER_TIME = [0, None, False]
+TIMER_TIME = Timer()
 count_of_flags = 0
 player = PlayersClass(0, 0)
 player_name=''
@@ -607,11 +618,11 @@ def draw():
 
 def update():
     global mouse_y, mouse_x
-    if TIMER_TIME[2] and time.time() - TIMER_TIME[1] >= TIMER_TIME[0]:
-        TIMER_TIME[2] = False
+    if TIMER_TIME.is_timer_running and time.time() - TIMER_TIME.time_elapsed >= TIMER_TIME.start_time:
+        TIMER_TIME.stop_timer()
     if (
-        TIMER_TIME[2]
-        and max(0, int(TIMER_TIME[0] - (time.time() - TIMER_TIME[1]))) == 0
+        TIMER_TIME.is_timer_running
+        and max(0, int(TIMER_TIME.time_elapsed - (time.time() - TIMER_TIME.time_elapsed))) == 0
     ):
         game_status.state = StagesOfGameConstants.END_OF_GAME
 

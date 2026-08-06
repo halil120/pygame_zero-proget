@@ -24,7 +24,6 @@ class ConstantsStr(Enum):
     COLOR_BLOCK_DEFAULT = images.empty_41
     STONE_TEXTURE = images.stone_41
     BOMB_TEXTURE = images.bomb_41
-    PLAYER_TEXTURE = images.player
     CHAMPIONS_TEXTURE = images.champions_button
     NAME_OF_CHAMPIONS = images.names_of_champions
 
@@ -235,7 +234,7 @@ class Mouse_On:
                 and not field_x_y.is_flagget
                 and button == mouse.LEFT
             ):
-                field_x_y.is_solid = False
+                open_empty_area(field,change_x,change_y)
                 field_x_y.is_flagget = False
             elif (
                 change_x < C_F_G_B.size_field
@@ -493,6 +492,34 @@ def draw_name_input(screen):
     screen.draw.text(player_name,(115, 250),fontsize=35,color="black")
 
     screen.draw.text("Enter - Save",center=(WIDTH // 2, 330),fontsize=25,color="white")
+
+
+def open_empty_area(field, start_x, start_y):
+    from collections import deque
+    queue = deque([(start_x, start_y)])
+    visited = {(start_x, start_y)}
+    while queue:
+        x,y=queue.popleft()
+        field[x][y].is_solid=False
+        cordinates=(-1,0,1)
+        if field[x][y].adjacent_mine_count != 0:
+            continue
+        for dx in cordinates:
+            for dy in cordinates:
+                if dx==0 and dy==0:
+                    continue
+                actual_x=dx+x
+                actual_y=dy+y
+                if not(0<=actual_x<C_F_G_B.size_field and 0<=actual_y<C_F_G_B.size_field):
+                    continue
+                clict_block=field[actual_x][actual_y]
+                if clict_block.is_bombed and clict_block.is_flagget:
+                    continue
+                clict_block.is_solid=False
+                if (clict_block.adjacent_mine_count == 0 and (actual_x, actual_y) not in visited):
+                    queue.append((actual_x, actual_y))
+                    visited.add((actual_x, actual_y))
+                
 
 
 WHERE_BOMBS = []

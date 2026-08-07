@@ -157,7 +157,7 @@ class FieldObj:
             return self.texture_size[1]
         if game_status.state == StagesOfGameConstants.END_OF_GAME or game_status.state == StagesOfGameConstants.WIN_OF_GAME:
             return self.texture_size[2]  
-        return self.texture_size[0]   # 2 если хотите видеть бомбы, 0 если нет
+        return self.texture_size[2]   # 2 если хотите видеть бомбы, 0 если нет
 
 
 class Timer:

@@ -26,6 +26,7 @@ class ConstantsStr(Enum):
     BOMB_TEXTURE = images.bomb_41
     CHAMPIONS_TEXTURE = images.champions_button
     NAME_OF_CHAMPIONS = images.names_of_champions
+    CAT=pygame.transform.smoothscale(images.fun_cat_meme,(400,400))
 
 
 DIFFICLTY={
@@ -50,6 +51,7 @@ class StagesOfGameConstants(Enum):
     CAMPIONS = auto()
     SELECTING_DIFFICULTY = auto()
     GAME = auto()
+    CAT=auto()
     END_OF_GAME = auto()
     WIN_OF_GAME = auto()
     ENTER_NAME = auto()
@@ -130,6 +132,7 @@ class StatesOfGame:
         elif (
             self.state == StagesOfGameConstants.GAME
             or self.state == StagesOfGameConstants.END_OF_GAME
+            or self.state == StagesOfGameConstants.WIN_OF_GAME
         ):
             field_update(screen, field, C_F_G_B.size_field, C_F_G_B.size_block)
 
@@ -152,7 +155,7 @@ class FieldObj:
             return self.texture_size[0]
         elif not self.is_solid and not self.is_bombed:
             return self.texture_size[1]
-        if game_status.state == StagesOfGameConstants.END_OF_GAME:
+        if game_status.state == StagesOfGameConstants.END_OF_GAME or game_status.state == StagesOfGameConstants.WIN_OF_GAME:
             return self.texture_size[2]  
         return self.texture_size[0]   # 2 если хотите видеть бомбы, 0 если нет
 
@@ -195,8 +198,7 @@ class ConstantsForGameBild:
         self.size_block=size_block
         
 
-
-class Keybord_On:         
+class Keybord_On:
     @staticmethod
     def state_ENTER_NAME(key,unicode):
         global player_name, MAX_NAME_LENGHT
@@ -276,8 +278,11 @@ class Mouse_On:
         count_of_flags = 0
         
     @staticmethod
-    def state_MENU(x,y):
+    def state_MENU(x,y,button):
         global selected_diff_on_keybord,selected_diff_on_mouse,player,count_of_klics
+        if 530<=x<WIDTH and 570<=y<HEIGHT and button == mouse.MIDDLE:
+            game_status.state = StagesOfGameConstants.CAT
+            
         if 130 < x < 430 and 60 < y < 212:
             selected_diff_on_keybord = 0
             selected_diff_on_mouse = 0
@@ -315,6 +320,15 @@ class Mouse_On:
     def state_CHAMP(button):
         if button == mouse.RIGHT:
             game_status.state = StagesOfGameConstants.MENU
+
+    @staticmethod
+    def state_CAT(button,screen):
+        if button:
+            game_status.state = StagesOfGameConstants.MENU
+            
+        
+        
+        
 
     
 def chekc_bombs_nearby(field, x, y):
@@ -388,6 +402,9 @@ def field_update(screen_, field, count_field, size_of_block):
     if game_status.state == StagesOfGameConstants.END_OF_GAME:
         screen_.draw.text("Game Over", (155, 265), color="black", fontsize=75)
 
+    if game_status.state == StagesOfGameConstants.WIN_OF_GAME:
+        screen_.draw.text("You Win", (155, 265), color="white", fontsize=75)
+        
     counter_flagget_bombs = 0
     for x, y in WHERE_BOMBS:
         if field[x][y].is_flagget:
@@ -420,10 +437,12 @@ def backfront(screen_):
     elif game_status.state == StagesOfGameConstants.WIN_OF_GAME:
         TIMER_TIME.stop_timer()
         timer_end=int(time.time() - TIMER_TIME.time_elapsed)
-        screen_.fill((255, 255, 255))
+        screen_.fill((100, 100, 100))
         screen_.draw.text("You Win", (175, 265), color="black", fontsize=75)
     elif game_status.state == StagesOfGameConstants.ENTER_NAME:
         screen_.fill((40, 136, 235))
+    elif game_status.state == StagesOfGameConstants.CAT:
+        screen_.blit(ConstantsStr.CAT.value,(80,100))
 
 
 def timer_on_skreen(screen_):
@@ -584,7 +603,7 @@ def on_mouse_down(pos, button):
     x, y = pos
     
     if game_status.state == StagesOfGameConstants.MENU:
-        Mouse_On.state_MENU(x,y)
+        Mouse_On.state_MENU(x,y,button)
         
     elif game_status.state == StagesOfGameConstants.CAMPIONS:
         Mouse_On.state_CHAMP(button)
@@ -597,4 +616,7 @@ def on_mouse_down(pos, button):
         
     elif game_status.state == StagesOfGameConstants.END_OF_GAME or game_status.state == StagesOfGameConstants.WIN_OF_GAME:
         Mouse_On.state_WIN_OR_LOSE(button)
+        
+    elif game_status.state == StagesOfGameConstants.CAT:
+        Mouse_On.state_CAT(button,screen)
 

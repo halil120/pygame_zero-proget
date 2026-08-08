@@ -157,7 +157,7 @@ class FieldObj:
             return self.texture_size[1]
         if game_status.state == StagesOfGameConstants.END_OF_GAME or game_status.state == StagesOfGameConstants.WIN_OF_GAME:
             return self.texture_size[2]  
-        return self.texture_size[2]   # 2 если хотите видеть бомбы, 0 если нет
+        return self.texture_size[0]   # 2 если хотите видеть бомбы, 0 если нет
 
 
 class Timer:
@@ -294,9 +294,11 @@ class Mouse_On:
             game_status.state = StagesOfGameConstants.CAMPIONS
     
     @staticmethod
-    def state_SELCT_DIFF(x,y):
-        global selected_diff_on_mouse
-        if (
+    def state_SELCT_DIFF(x,y,button):
+        if button == mouse.RIGHT:
+            game_status.state=StagesOfGameConstants.MENU
+        
+        elif (
             Constants.PUT_BUTTONS_X < x < SAZE_OF_PICTYRE[0] + Constants.PUT_BUTTONS_X
             and 52 < y < SAZE_OF_PICTYRE[1] + 52
         ):
@@ -306,14 +308,12 @@ class Mouse_On:
             Constants.PUT_BUTTONS_X < x < SAZE_OF_PICTYRE[0] + Constants.PUT_BUTTONS_X
             and 220 < y < SAZE_OF_PICTYRE[1] + 220
         ):
-            selected_diff_on_mouse += 1
             ClassForDifficltySelect.diff_selector('MEDIUM')
 
         elif (
             Constants.PUT_BUTTONS_X < x < SAZE_OF_PICTYRE[0] + Constants.PUT_BUTTONS_X
             and 388 < y < SAZE_OF_PICTYRE[1] + 388
         ):
-            selected_diff_on_mouse += 2
             ClassForDifficltySelect.diff_selector('HARD')
 
     @staticmethod
@@ -400,10 +400,10 @@ def field_update(screen_, field, count_field, size_of_block):
 
 
     if game_status.state == StagesOfGameConstants.END_OF_GAME:
-        screen_.draw.text("Game Over", (155, 265), color="black", fontsize=75)
+        screen_.draw.text("Game Over", (155, 265), color=(148, 18, 16), fontsize=75)
 
     if game_status.state == StagesOfGameConstants.WIN_OF_GAME:
-        screen_.draw.text("You Win", (155, 265), color="white", fontsize=75)
+        screen_.draw.text("You Win", (175, 265), color="yellow", fontsize=75)
         
     counter_flagget_bombs = 0
     for x, y in WHERE_BOMBS:
@@ -459,9 +459,9 @@ def read_records():
         text_put_pixel += 25
         records_loaded = json.load(file)
 
-        easy = sorted(records_loaded["easy"], key=lambda i: i["time"])
-        medium = sorted(records_loaded["medium"], key=lambda i: i["time"])
-        hard = sorted(records_loaded["hard"], key=lambda i: i["time"])
+        easy = sorted(records_loaded["easy"], key=lambda i: int(i["time"]))
+        medium = sorted(records_loaded["medium"], key=lambda i: int(i["time"]))
+        hard = sorted(records_loaded["hard"], key=lambda i: int(i["time"]))
 
         for i in range(3):
             if len(records_loaded["easy"]) > i:
@@ -555,8 +555,6 @@ count_of_flags = 0
 player_name=''
 count_of_klics=0
 
-selected_diff_on_mouse = 0
-selected_diff_on_keybord = 0
 
 mouse_x, mouse_y = (10, 10)
 DICT_FOR_FNC = {0: "easy", 1: "medium", 2: "hard"}
@@ -598,7 +596,7 @@ def on_key_down(key,unicode):
         Keybord_On.state_ENTER_NAME(key,unicode)
 
 
-def on_mouse_down(pos, button):
+def on_mouse_up(pos, button):
     
     x, y = pos
     
@@ -609,7 +607,7 @@ def on_mouse_down(pos, button):
         Mouse_On.state_CHAMP(button)
         
     elif game_status.state == StagesOfGameConstants.SELECTING_DIFFICULTY:
-        Mouse_On.state_SELCT_DIFF(x,y)
+        Mouse_On.state_SELCT_DIFF(x,y,button)
 
     elif game_status.state == StagesOfGameConstants.GAME:
         Mouse_On.state_GAME(x,y,button)
